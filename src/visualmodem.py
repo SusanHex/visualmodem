@@ -1,5 +1,18 @@
-from tkinter import *      
-from sys import argv
+import argparse
+from email.policy import default
+from mimetypes import init
+import tkinter      
+import pathlib
+from os.path import getsize
+# init tk window
+window = tkinter.Tk()
+
+# Define some arg parse stuff
+ARGPARSER = argparse.ArgumentParser(description="This program turns abitrary data into an image")
+ARGPARSER.add_argument("file", type=argparse.FileType('rb'))
+ARGPARSER.add_argument("-o", "--output", default=False, nargs='?', help="Writes the generated image to the disk")
+ARGPARSER.add_argument("-d", "--dimensions", nargs=2, default=window.maxsize(), type=int, help=f"Specify height and width of image. Eg: {window.maxsize()[0]} {window.maxsize()[1]}", )
+PARSEDARGS = ARGPARSER.parse_args()
 
 def padHex(num: int) -> str:
     temp_str = hex(num)[2:]
@@ -9,19 +22,20 @@ def padHex(num: int) -> str:
         temp_str = "#000000"
     return '#'+temp_str
 
-with open(argv[1], 'rb') as f:
+
+with PARSEDARGS.file as f:
     f.seek(0)
-    window = Tk()
+    
     window.title('Visual Modem')
-    WIDTH, HEIGHT = window.maxsize()
+    WIDTH, HEIGHT = PARSEDARGS.dimensions
     print(f"Max Bytes: {HEIGHT*WIDTH*3}")
-    canvas = Canvas(
+    canvas = tkinter.Canvas(
         window,
         width = WIDTH, 
         height = HEIGHT
         )     
     canvas.pack()      
-    img = PhotoImage(width=WIDTH, height=HEIGHT)
+    img = tkinter.PhotoImage(width=WIDTH, height=HEIGHT)
     image_str = " "
     for i in range(WIDTH):
         print(f"{int(i/WIDTH*100)}%")
@@ -43,8 +57,10 @@ with open(argv[1], 'rb') as f:
     canvas.create_image(
         0,
         0, 
-        anchor=NW, 
+        anchor=tkinter.NW, 
         image=img
         )
     # print(image_str)
+    if PARSEDARGS.output:
+        img.write("./output.png")
     window.mainloop()  
